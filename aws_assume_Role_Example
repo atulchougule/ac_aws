@@ -1,0 +1,38 @@
+Example ( Shell Script )  used for Clearing the Cloudfront Cache clear ( For Cross AWS Account - using Assume Role ) 
+===========================================================================================================
+Invalidate(){
+die() { echo 1>&2 "ERROR: $*"  ; exit 1 ; }
+info() { echo 1>&2 "INFO: $*" ; }
+
+
+role="arn:aws:iam::<aws account ID> :role/<IAM Role > "
+Session_name="temp_session"
+Prod_role=$(aws sts assume-role --role-arn $role --role-session-name $Session_name)
+aws_default_region="us-west-2"
+
+   aws_access_key_id=$(echo $Prod_role | /usr/local/sbin/jq .Credentials.AccessKeyId | xargs)
+                        aws_secret_access_key=$(echo $Prod_role | /usr/local/sbin/jq .Credentials.SecretAccessKey | xargs)
+                        aws_session_token=$(echo $Prod_role | /usr/local/sbin/jq .Credentials.SessionToken | xargs)
+
+                        {
+                            echo "export AWS_DEFAULT_REGION=${aws_default_region}"
+                            echo "export AWS_ACCESS_KEY_ID=${aws_access_key_id}"
+                            echo "export AWS_SECRET_ACCESS_KEY=${aws_secret_access_key}"
+                            echo "export AWS_SESSION_TOKEN=${aws_session_token}"
+                        } > ~/aws_variables.properties
+                        chmod a+x ~/aws_variables.properties
+
+source ~/aws_variables.properties
+/usr/local/sbin/aws cloudfront create-invalidation --distribution-id <Cloudfront Distro ID> --paths /<path to clear cache>/* 1>>/dev/null
+
+}
+
+------
+
+#if ENV is stg and COVEO_LOC is stg
+if [ $env == "stage" ];  then
+        /usr/local/bin/aws s3 cp <Path of the datafile> s3://<Bucket path>/<datafile.xml>  --grants read=id=<AWS Cannonical id (Origin Access ID) for the corresponding Cloudfront ID >
+fi
+
+Invalidate
+
