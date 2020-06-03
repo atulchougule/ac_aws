@@ -1,4 +1,9 @@
 Example ( Shell Script )  used for Clearing the Cloudfront Cache clear ( For Cross AWS Account - using Assume Role ) 
+
+ ( Prerequisite :- install jq ) 
+wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+chmod +x ./jq
+cp jq /usr/bin
 ===========================================================================================================
 Invalidate(){
 die() { echo 1>&2 "ERROR: $*"  ; exit 1 ; }
